@@ -1,2 +1,18 @@
 # SaaStenant
-租户系统
+
+租户系统。
+
+## 数据库表结构
+
+仓库当前没有现成的应用代码或迁移框架，因此本次先提供一份可直接落地的 PostgreSQL DDL：
+
+- `/home/runner/work/SaaStenant/SaaStenant/db/saas_tenant_schema.sql`
+
+该脚本覆盖了问题描述中的核心模块：
+
+- 平台管理体系
+- 租户生命周期与租户信息
+- 资源配额与配置中心
+- SaaS 套餐、订阅、计费与支付
+- API Key、Webhook 与平台运营统计
+- 日志审计、通知、文件存储与基础设施策略
