@@ -214,7 +214,7 @@
 - **建议实体名**：`PlatformIpWhitelist`
 - **业务用途**：维护平台级或平台用户级的访问白名单。
 - **主要关系**：`subject_id` -> `platform_users`；`created_by` -> `platform_users`
-- **表级约束**：`CHECK ( (subject_type = 'platform' AND subject_id IS NULL)`
+- **表级约束**：`CHECK ((subject_type = 'platform' AND subject_id IS NULL) OR (subject_type = 'user' AND subject_id IS NOT NULL))`
 - **索引说明**：未在当前字典中定义额外索引。
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
@@ -230,7 +230,6 @@
 | `effective_to` | `TIMESTAMP` | `LocalDateTime` | 是 | - | - | 业务字段。 |
 | `created_by` | `BIGINT` | `Long` | 是 | - | FK->platform_users | 创建人平台用户 ID。 |
 | `created_at` | `TIMESTAMP` | `LocalDateTime` | 否 | CURRENT_TIMESTAMP | NOT NULL | 创建时间。建议实体类型使用 LocalDateTime/OffsetDateTime。 |
-| `OR` | `(subject_type = 'user' AND subject_id IS` | `String` | 否 | - | NOT NULL | 业务字段。 |
 
 ### platform_mfa_settings（平台 MFA 配置）
 
@@ -985,7 +984,7 @@
 - **建议实体名**：`OperationLog`
 - **业务用途**：记录平台用户、租户用户或系统触发的操作日志。
 - **主要关系**：`tenant_id` -> `tenants`
-- **表级约束**：`CHECK ( (operator_type = 'system' AND operator_id IS NULL)`
+- **表级约束**：`CHECK ((operator_type = 'system' AND operator_id IS NULL) OR (operator_type IN ('platform_user', 'tenant_user') AND operator_id IS NOT NULL))`
 - **索引说明**：`idx_operation_logs_tenant_time`(普通，字段：tenant_id, created_at DESC`)
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
@@ -1003,7 +1002,6 @@
 | `operation_result` | `VARCHAR(32)` | `String` | 否 | - | NOT NULL / CHECK(operation_result IN ('success', 'failed')) | 操作结果。 |
 | `details` | `JSONB` | `JsonNode/Map<String,Object>` | 是 | - | - | 操作详情 JSON。 |
 | `created_at` | `TIMESTAMP` | `LocalDateTime` | 否 | CURRENT_TIMESTAMP | NOT NULL | 创建时间。建议实体类型使用 LocalDateTime/OffsetDateTime。 |
-| `OR` | `(operator_type IN ('platform_user', 'tenant_user') AND operator_id IS` | `String` | 否 | - | NOT NULL | 业务字段。 |
 
 ### audit_logs（审计日志）
 
@@ -1116,7 +1114,7 @@
 - **建议实体名**：`TenantFile`
 - **业务用途**：记录上传文件、所属租户、可见性、下载统计和校验信息。
 - **主要关系**：`tenant_id` -> `tenants`；`storage_strategy_id` -> `storage_strategies`
-- **表级约束**：`CHECK ( (uploader_type = 'system' AND uploader_id IS NULL)`
+- **表级约束**：`CHECK ((uploader_type = 'system' AND uploader_id IS NULL) OR (uploader_type IN ('platform_user', 'tenant_user') AND uploader_id IS NOT NULL))`
 - **索引说明**：`idx_tenant_files_tenant_visibility`(普通，字段：tenant_id, visibility`)
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
@@ -1137,14 +1135,13 @@
 | `last_downloaded_at` | `TIMESTAMP` | `LocalDateTime` | 是 | - | - | 最近下载时间。 |
 | `created_at` | `TIMESTAMP` | `LocalDateTime` | 否 | CURRENT_TIMESTAMP | NOT NULL | 创建时间。建议实体类型使用 LocalDateTime/OffsetDateTime。 |
 | `updated_at` | `TIMESTAMP` | `LocalDateTime` | 否 | CURRENT_TIMESTAMP | NOT NULL | 更新时间。建议实体类型使用 LocalDateTime/OffsetDateTime。 |
-| `OR` | `(uploader_type IN ('platform_user', 'tenant_user') AND uploader_id IS` | `String` | 否 | - | NOT NULL | 业务字段。 |
 
 ### file_access_policies（文件访问策略）
 
 - **建议实体名**：`FileAccessPolicy`
 - **业务用途**：定义文件在租户、用户、角色、公开范围内的访问权限。
 - **主要关系**：`file_id` -> `tenant_files`
-- **表级约束**：`CHECK ( (subject_type = 'public' AND subject_id IS NULL)`
+- **表级约束**：`CHECK ((subject_type = 'public' AND subject_id IS NULL) OR (subject_type IN ('tenant', 'user', 'role') AND subject_id IS NOT NULL))`
 - **索引说明**：`uq_file_access_policy_scoped_subject`(唯一，字段：file_id, subject_type, subject_id, permission_code`，条件：subject_id IS NOT NULL)；`uq_file_access_policy_public`(唯一，字段：file_id, subject_type, permission_code`，条件：subject_id IS NULL)
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
@@ -1155,7 +1152,6 @@
 | `subject_id` | `VARCHAR(128)` | `String` | 是 | - | - | 授权主体标识；公开时为空。 |
 | `permission_code` | `VARCHAR(32)` | `String` | 否 | - | NOT NULL / CHECK(permission_code IN ('read', 'write', 'delete', 'download')) | 权限编码。 |
 | `created_at` | `TIMESTAMP` | `LocalDateTime` | 否 | CURRENT_TIMESTAMP | NOT NULL | 创建时间。建议实体类型使用 LocalDateTime/OffsetDateTime。 |
-| `OR` | `(subject_type IN ('tenant', 'user', 'role') AND subject_id IS` | `String` | 否 | - | NOT NULL | 业务字段。 |
 
 ## 模块：14. 技术基础设施
 
