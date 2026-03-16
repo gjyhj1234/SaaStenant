@@ -259,7 +259,7 @@
 - **业务用途**：记录平台管理员登录结果、来源 IP、UA 和失败原因。
 - **主要关系**：`user_id` -> `platform_users`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_platform_login_logs_user_time`(普通，字段：user_id, occurred_at DESC`)
+- **索引说明**：`idx_platform_login_logs_user_time`（普通，字段：`user_id, occurred_at DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -279,7 +279,7 @@
 
 - **建议实体名**：`Tenant`
 - **业务用途**：租户核心主数据表，承载租户身份、状态、隔离模式、联系信息和当前套餐/订阅指针。
-- **主要关系**：`group_id` -> `tenant_groups`；`created_by` -> `platform_users`；`current_plan_id` 后置外键指向 `saas_package_versions.id`。；`current_subscription_id` 后置外键指向 `tenant_subscriptions.id`。；之所以后置，是因为 `tenants` 与订阅/套餐存在循环引用，实体生成时这两个字段应保留为可空 Long 引用。
+- **主要关系**：`group_id` -> `tenant_groups`； `created_by` -> `platform_users`； `current_plan_id` 后置外键指向 `saas_package_versions.id`； `current_subscription_id` 后置外键指向 `tenant_subscriptions.id`； 后置原因：`tenants` 与订阅/套餐存在循环引用，实体生成时这两个字段应保留为可空 Long 引用。
 - **表级约束**：无额外表级约束。
 - **索引说明**：未在当前字典中定义额外索引。
 
@@ -342,7 +342,7 @@
 - **业务用途**：记录租户开通、启用、暂停、恢复、关闭和删除等状态迁移事件。
 - **主要关系**：`tenant_id` -> `tenants`；`operator_id` -> `platform_users`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_tenant_lifecycle_events_tenant_time`(普通，字段：tenant_id, occurred_at DESC`)
+- **索引说明**：`idx_tenant_lifecycle_events_tenant_time`（普通，字段：`tenant_id, occurred_at DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -362,7 +362,7 @@
 - **业务用途**：记录租户数据归档、备份、迁移、清理等后台作业。
 - **主要关系**：`tenant_id` -> `tenants`；`created_by` -> `platform_users`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_tenant_data_jobs_tenant_type`(普通，字段：tenant_id, job_type`)
+- **索引说明**：`idx_tenant_data_jobs_tenant_type`（普通，字段：`tenant_id, job_type`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -482,7 +482,7 @@
 | `quota_type` | `VARCHAR(32)` | `String` | 否 | - | NOT NULL / CHECK(quota_type IN ('user_count', 'api_calls', 'concurrent_requests', 'storage_size', 'database_size', 'file_count')) | 配额类型。应生成枚举。 |
 | `quota_limit` | `BIGINT` | `Long` | 否 | - | NOT NULL | 配额上限值。 |
 | `warning_threshold` | `BIGINT` | `Long` | 是 | - | - | 预警阈值。 |
-| `reset_cycle` | `VARCHAR(32) CHECK (reset_cycle IN ('none', 'hourly', 'daily', 'weekly', 'monthly', 'yearly'))` | `String` | 是 | - | CHECK(reset_cycle IN ('none', 'hourly', 'daily', 'weekly', 'monthly', 'yearly')) | 配额重置周期。 |
+| `reset_cycle` | `VARCHAR(32)` | `String` | 是 | - | CHECK(reset_cycle IN ('none', 'hourly', 'daily', 'weekly', 'monthly', 'yearly')) | 配额重置周期。 |
 | `effective_from` | `TIMESTAMP` | `LocalDateTime` | 是 | - | - | 业务字段。 |
 | `effective_to` | `TIMESTAMP` | `LocalDateTime` | 是 | - | - | 业务字段。 |
 | `created_at` | `TIMESTAMP` | `LocalDateTime` | 否 | CURRENT_TIMESTAMP | NOT NULL | 创建时间。建议实体类型使用 LocalDateTime/OffsetDateTime。 |
@@ -494,7 +494,7 @@
 - **业务用途**：按天统计租户资源实际使用量，用于配额判断和运营分析。
 - **主要关系**：`tenant_id` -> `tenants`
 - **表级约束**：`UNIQUE (tenant_id, metric_date)`
-- **索引说明**：`idx_usage_stats_tenant_date`(普通，字段：tenant_id, metric_date DESC`)
+- **索引说明**：`idx_usage_stats_tenant_date`（普通，字段：`tenant_id, metric_date DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -538,7 +538,7 @@
 - **业务用途**：维护租户功能启停和灰度开关配置。
 - **主要关系**：`tenant_id` -> `tenants`
 - **表级约束**：`UNIQUE (tenant_id, feature_key)`
-- **索引说明**：`idx_feature_flags_tenant_enabled`(普通，字段：tenant_id, enabled`)
+- **索引说明**：`idx_feature_flags_tenant_enabled`（普通，字段：`tenant_id, enabled`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -665,7 +665,7 @@
 - **业务用途**：维护租户当前或历史套餐订阅记录。
 - **主要关系**：`tenant_id` -> `tenants`；`package_version_id` -> `saas_package_versions`；`created_by` -> `platform_users`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_subscriptions_tenant_status`(普通，字段：tenant_id, subscription_status`)
+- **索引说明**：`idx_subscriptions_tenant_status`（普通，字段：`tenant_id, subscription_status`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -731,7 +731,7 @@
 - **业务用途**：维护租户账单主单据和计费区间。
 - **主要关系**：`tenant_id` -> `tenants`；`subscription_id` -> `tenant_subscriptions`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_invoices_tenant_status`(普通，字段：tenant_id, invoice_status`)
+- **索引说明**：`idx_invoices_tenant_status`（普通，字段：`tenant_id, invoice_status`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -779,7 +779,7 @@
 - **业务用途**：维护账单对应的支付订单和第三方交易状态。
 - **主要关系**：`tenant_id` -> `tenants`；`invoice_id` -> `billing_invoices`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_payment_orders_tenant_status`(普通，字段：tenant_id, payment_status`)
+- **索引说明**：`idx_payment_orders_tenant_status`（普通，字段：`tenant_id, payment_status`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -848,7 +848,7 @@
 - **业务用途**：按天和接口维度统计 API 调用次数、成功数、失败数和延迟。
 - **主要关系**：`tenant_id` -> `tenants`；`api_key_id` -> `tenant_api_keys`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_api_usage_tenant_date`(普通，字段：tenant_id, stat_date DESC`)；`uq_api_usage_stats_with_key`(唯一，字段：tenant_id, api_key_id, stat_date, api_path`，条件：api_key_id IS NOT NULL)；`uq_api_usage_stats_without_key`(唯一，字段：tenant_id, stat_date, api_path`，条件：api_key_id IS NULL)
+- **索引说明**：`idx_api_usage_tenant_date`（普通，字段：`tenant_id, stat_date DESC`）；`uq_api_usage_stats_with_key`（唯一，字段：`tenant_id, api_key_id, stat_date, api_path`，条件：`api_key_id IS NOT NULL`）；`uq_api_usage_stats_without_key`（唯一，字段：`tenant_id, stat_date, api_path`，条件：`api_key_id IS NULL`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -921,7 +921,7 @@
 - **业务用途**：记录每次 Webhook 推送的请求体、响应码、响应体和重试次数。
 - **主要关系**：`webhook_id` -> `tenant_webhooks`；`event_id` -> `webhook_events`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_webhook_delivery_status_time`(普通，字段：delivery_status, created_at DESC`)
+- **索引说明**：`idx_webhook_delivery_status_time`（普通，字段：`delivery_status, created_at DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -942,7 +942,7 @@
 ### tenant_daily_stats（租户日统计）
 
 - **建议实体名**：`TenantDailyStat`
-- **业务用途**：按天沉淀租户活跃、存储、资源分等运营统计数据。
+- **业务用途**：按天沉淀租户活跃、存储、资源评分等运营统计数据。
 - **主要关系**：`tenant_id` -> `tenants`
 - **表级约束**：`UNIQUE (tenant_id, stat_date)`
 - **索引说明**：未在当前字典中定义额外索引。
@@ -965,7 +965,7 @@
 - **业务用途**：记录平台服务状态、系统负载和接口性能等指标。
 - **主要关系**：无直接外键，主要作为独立主档或日志表使用。
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_platform_monitor_metrics_type_time`(普通，字段：metric_type, collected_at DESC`)
+- **索引说明**：`idx_platform_monitor_metrics_type_time`（普通，字段：`metric_type, collected_at DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -985,7 +985,7 @@
 - **业务用途**：记录平台用户、租户用户或系统触发的操作日志。
 - **主要关系**：`tenant_id` -> `tenants`
 - **表级约束**：`CHECK ((operator_type = 'system' AND operator_id IS NULL) OR (operator_type IN ('platform_user', 'tenant_user') AND operator_id IS NOT NULL))`
-- **索引说明**：`idx_operation_logs_tenant_time`(普通，字段：tenant_id, created_at DESC`)
+- **索引说明**：`idx_operation_logs_tenant_time`（普通，字段：`tenant_id, created_at DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1009,7 +1009,7 @@
 - **业务用途**：记录审计事件、严重等级、合规标签和变更摘要。
 - **主要关系**：`tenant_id` -> `tenants`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_audit_logs_tenant_time`(普通，字段：tenant_id, created_at DESC`)
+- **索引说明**：`idx_audit_logs_tenant_time`（普通，字段：`tenant_id, created_at DESC`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1070,7 +1070,7 @@
 - **业务用途**：记录实际发送给租户或用户的通知。
 - **主要关系**：`tenant_id` -> `tenants`；`template_id` -> `notification_templates`
 - **表级约束**：无额外表级约束。
-- **索引说明**：`idx_notifications_tenant_status`(普通，字段：tenant_id, send_status`)
+- **索引说明**：`idx_notifications_tenant_status`（普通，字段：`tenant_id, send_status`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1115,7 +1115,7 @@
 - **业务用途**：记录上传文件、所属租户、可见性、下载统计和校验信息。
 - **主要关系**：`tenant_id` -> `tenants`；`storage_strategy_id` -> `storage_strategies`
 - **表级约束**：`CHECK ((uploader_type = 'system' AND uploader_id IS NULL) OR (uploader_type IN ('platform_user', 'tenant_user') AND uploader_id IS NOT NULL))`
-- **索引说明**：`idx_tenant_files_tenant_visibility`(普通，字段：tenant_id, visibility`)
+- **索引说明**：`idx_tenant_files_tenant_visibility`（普通，字段：`tenant_id, visibility`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1142,7 +1142,7 @@
 - **业务用途**：定义文件在租户、用户、角色、公开范围内的访问权限。
 - **主要关系**：`file_id` -> `tenant_files`
 - **表级约束**：`CHECK ((subject_type = 'public' AND subject_id IS NULL) OR (subject_type IN ('tenant', 'user', 'role') AND subject_id IS NOT NULL))`
-- **索引说明**：`uq_file_access_policy_scoped_subject`(唯一，字段：file_id, subject_type, subject_id, permission_code`，条件：subject_id IS NOT NULL)；`uq_file_access_policy_public`(唯一，字段：file_id, subject_type, permission_code`，条件：subject_id IS NULL)
+- **索引说明**：`uq_file_access_policy_scoped_subject`（唯一，字段：`file_id, subject_type, subject_id, permission_code`，条件：`subject_id IS NOT NULL`）；`uq_file_access_policy_public`（唯一，字段：`file_id, subject_type, permission_code`，条件：`subject_id IS NULL`）
 
 | 字段 | 数据类型 | 建议实体类型 | 可空 | 默认值 | 关键约束 | 字段说明 |
 | --- | --- | --- | --- | --- | --- | --- |

@@ -6,7 +6,7 @@
 
 当前仓库交付物为 **AI 编程优先的数据库字典文档**，不是数据库建表 SQL。
 
-- `/home/runner/work/SaaStenant/SaaStenant/db/database_dictionary.md`
+- `db/database_dictionary.md`
 
 该文档用于：
 
