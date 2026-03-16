@@ -6,7 +6,7 @@
 
 仓库当前没有现成的应用代码或迁移框架，因此本次先提供一份可直接落地的 PostgreSQL DDL：
 
-- `/home/runner/work/SaaStenant/SaaStenant/db/saas_tenant_schema.sql`
+- `db/saas_tenant_schema.sql`
 
 该脚本覆盖了问题描述中的核心模块：
 

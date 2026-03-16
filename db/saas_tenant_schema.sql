@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS platform_security_policies (
 CREATE TABLE IF NOT EXISTS platform_ip_whitelists (
     id BIGSERIAL PRIMARY KEY,
     subject_type VARCHAR(32) NOT NULL CHECK (subject_type IN ('platform', 'user')),
-    subject_id BIGINT,
+    subject_id BIGINT REFERENCES platform_users(id),
     ip_address VARCHAR(64) NOT NULL,
     ip_cidr VARCHAR(64),
     description TEXT,
@@ -113,7 +113,11 @@ CREATE TABLE IF NOT EXISTS platform_ip_whitelists (
     effective_from TIMESTAMP,
     effective_to TIMESTAMP,
     created_by BIGINT REFERENCES platform_users(id),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (
+        (subject_type = 'platform' AND subject_id IS NULL)
+        OR (subject_type = 'user' AND subject_id IS NOT NULL)
+    )
 );
 
 CREATE TABLE IF NOT EXISTS platform_mfa_settings (
@@ -296,6 +300,7 @@ CREATE TABLE IF NOT EXISTS tenant_resource_usage_stats (
 CREATE TABLE IF NOT EXISTS rate_limit_policies (
     id BIGSERIAL PRIMARY KEY,
     subject_type VARCHAR(32) NOT NULL CHECK (subject_type IN ('api', 'tenant', 'ip')),
+    -- api: API path or code; tenant: tenant_code or tenant id; ip: client IP/CIDR
     subject_key VARCHAR(255) NOT NULL,
     window_seconds INTEGER NOT NULL,
     limit_count INTEGER NOT NULL,
@@ -531,8 +536,7 @@ CREATE TABLE IF NOT EXISTS tenant_api_usage_stats (
     success_count BIGINT NOT NULL DEFAULT 0,
     error_count BIGINT NOT NULL DEFAULT 0,
     average_latency_ms INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (tenant_id, api_key_id, stat_date, api_path)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS webhook_events (
@@ -616,7 +620,11 @@ CREATE TABLE IF NOT EXISTS operation_logs (
     user_agent TEXT,
     operation_result VARCHAR(32) NOT NULL CHECK (operation_result IN ('success', 'failed')),
     details JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (
+        (operator_type = 'system' AND operator_id IS NULL)
+        OR (operator_type IN ('platform_user', 'tenant_user') AND operator_id IS NOT NULL)
+    )
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -699,7 +707,11 @@ CREATE TABLE IF NOT EXISTS tenant_files (
     download_count BIGINT NOT NULL DEFAULT 0,
     last_downloaded_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (
+        (uploader_type = 'system' AND uploader_id IS NULL)
+        OR (uploader_type IN ('platform_user', 'tenant_user') AND uploader_id IS NOT NULL)
+    )
 );
 
 CREATE TABLE IF NOT EXISTS file_access_policies (
@@ -709,13 +721,16 @@ CREATE TABLE IF NOT EXISTS file_access_policies (
     subject_id VARCHAR(128),
     permission_code VARCHAR(32) NOT NULL CHECK (permission_code IN ('read', 'write', 'delete', 'download')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (file_id, subject_type, subject_id, permission_code)
+    CHECK (
+        (subject_type = 'public' AND subject_id IS NULL)
+        OR (subject_type IN ('tenant', 'user', 'role') AND subject_id IS NOT NULL)
+    )
 );
 
 -- 14. 技术基础设施
 CREATE TABLE IF NOT EXISTS data_isolation_policies (
     id BIGSERIAL PRIMARY KEY,
-    tenant_id BIGINT REFERENCES tenants(id) ON DELETE CASCADE,
+    tenant_id BIGINT REFERENCES tenants(id),
     isolation_type VARCHAR(32) NOT NULL CHECK (isolation_type IN ('tenant_id', 'access_control', 'security_policy')),
     policy_name VARCHAR(128) NOT NULL,
     policy_config JSONB NOT NULL,
@@ -737,6 +752,8 @@ CREATE TABLE IF NOT EXISTS infrastructure_components (
     UNIQUE (component_type, component_name)
 );
 
+-- tenants.current_plan_id / current_subscription_id are intentionally attached after
+-- dependent tables are created because the subscription model also references tenants.
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -772,11 +789,15 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_tenant_status ON tenant_subscriptio
 CREATE INDEX IF NOT EXISTS idx_invoices_tenant_status ON billing_invoices (tenant_id, invoice_status);
 CREATE INDEX IF NOT EXISTS idx_payment_orders_tenant_status ON payment_orders (tenant_id, payment_status);
 CREATE INDEX IF NOT EXISTS idx_api_usage_tenant_date ON tenant_api_usage_stats (tenant_id, stat_date DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_api_usage_stats_with_key ON tenant_api_usage_stats (tenant_id, api_key_id, stat_date, api_path) WHERE api_key_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_api_usage_stats_without_key ON tenant_api_usage_stats (tenant_id, stat_date, api_path) WHERE api_key_id IS NULL;
 CREATE INDEX IF NOT EXISTS idx_webhook_delivery_status_time ON webhook_delivery_logs (delivery_status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_operation_logs_tenant_time ON operation_logs (tenant_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_tenant_time ON audit_logs (tenant_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_tenant_status ON notifications (tenant_id, send_status);
 CREATE INDEX IF NOT EXISTS idx_tenant_files_tenant_visibility ON tenant_files (tenant_id, visibility);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_file_access_policy_scoped_subject ON file_access_policies (file_id, subject_type, subject_id, permission_code) WHERE subject_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_file_access_policy_public ON file_access_policies (file_id, subject_type, permission_code) WHERE subject_id IS NULL;
 CREATE INDEX IF NOT EXISTS idx_platform_monitor_metrics_type_time ON platform_monitor_metrics (metric_type, collected_at DESC);
 
 COMMIT;
